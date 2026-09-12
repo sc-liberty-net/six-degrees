@@ -641,7 +641,7 @@
 
 <div id="app">
   <canvas id="map" tabindex="0" role="application"
-    aria-label="Interactive network map of South Carolina. 1,282 people connected by friendships. Use the search box to find a person, or arrow keys to pan and plus and minus to zoom."></canvas>
+    aria-label="Interactive network map of South Carolina, a proof of concept. 1,282 people connected by 4,566 friendships. Use the search box to find a person, or arrow keys to pan and plus and minus to zoom."></canvas>
   <div id="vignette" aria-hidden="true"></div>
 
   <header id="menubar">
@@ -803,7 +803,17 @@
     <div class="pbody" id="pbody"></div>
   </aside>
 
-  <div id="lockup">
+  <!-- aria-hidden, restored 2026-09-11 (room task t01). It was removed when this element
+       still carried the "paid for by" disclaimer and its focusable link; `d49e074` moved
+       both into #footline, leaving nothing here but the wordmark and the tagline, and a
+       focusable element inside a hidden subtree is the trap that made it unsafe.
+       One thing had to move first: the 4,566 figure lived *only* here, so hiding
+       this would have deleted the map's headline statistic from screen readers. It is now
+       in the canvas's own aria-label, which is where a screen reader actually lands.
+       Everything else here is a duplicate — the name is the <title> and the menu-bar
+       brand, the people count is the canvas label and the search placeholder, and "proof
+       of concept" is on every profile and path panel. -->
+  <div id="lockup" aria-hidden="true">
     <div class="over">Six Degrees of</div>
     <h1>South Carolina</h1>
     <div class="tag"><b>1,282</b> people &nbsp;·&nbsp; <b>4,566</b> friendships &nbsp;·&nbsp; proof of concept</div>
