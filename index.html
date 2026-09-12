@@ -382,9 +382,21 @@
      shorten around it and then run full width underneath. A float only pushes text in
      its own block context, which is why the X sits in the column, not beside it. */
   #panel .phead{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;
-                border-bottom:1px solid rgba(242,193,78,.16)}
+                border-bottom:1px solid rgba(242,193,78,.16);position:relative;overflow:hidden}
   #panel .phead > div{flex:1;min-width:0}
   #panel .phead > div::after{content:'';display:block;clear:both}
+  /* The county this person lives in, at its real shape, from the same path data the map
+     draws. Taller than the header and bled off the right edge, so it reads as a printed
+     plate rather than a diagram sitting in a box.
+     max-width keeps its whole mass to the right of the 74px portrait: the portrait is the
+     one opaque thing in this header, and a plate buried under it would be a plate nobody
+     sees. Everything else above it is glyphs, which do not conceal.
+     Purely decorative — aria-hidden, pointer-events none. The county's name is in the
+     text, so nothing here is the only carrier of a fact. */
+  .cplate{position:absolute;top:50%;right:-10px;transform:translateY(-50%);
+          height:190%;width:auto;max-width:52%;opacity:.13;fill:var(--gold);
+          pointer-events:none;z-index:0}
+  #panel .phead > div,#panel .phead > .avatar{position:relative;z-index:1}
   #closepanel{float:right;margin:0 0 6px 10px}
   #panel .pbody{overflow-y:auto;padding:14px 16px 18px;flex:1;overscroll-behavior:contain}
   .sprite{background-image:var(--atlas)}
@@ -465,6 +477,9 @@
   .frow .bar{margin-left:auto;width:52px;height:5px;border-radius:3px;background:rgba(255,255,255,.10);
              overflow:hidden;flex-shrink:0}
   .frow .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright))}
+  /* Marks a row that goes somewhere other than a profile. A bridge row walks the whole
+     chain, so it earns a chevron the plain person rows beside it do not have. */
+  .frow .via{margin-left:auto;flex-shrink:0;color:var(--gold);font-size:17px;line-height:1}
   .plist{display:flex;flex-direction:column}
   .note{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:14px}
 
@@ -496,6 +511,10 @@
   #reachrail i{flex:0 1 0;height:100%;transition:flex-grow .28s cubic-bezier(.4,0,.2,1)}
   .degbtn b{font-size:14px;font-weight:700;color:inherit}
   .degbtn span{font-size:9.5px;font-variant-numeric:tabular-nums;opacity:.85}
+  /* The degree's line colour, on the control that selects it. The dark hairline is what
+     keeps a gold chip legible once the button itself goes gold on selection. */
+  .degbtn .dsw{display:block;width:62%;height:3px;margin-top:3px;border-radius:2px;
+               box-shadow:0 0 0 1px rgba(10,18,36,.45)}
   .degbtn[aria-checked="true"]{background:var(--gold);border-color:var(--gold);color:#1A2338}
   .degcap{font-size:12px;color:var(--ink-dim);margin-top:7px;line-height:1.4}
 
@@ -768,9 +787,8 @@
     <!-- The key's first row used to explain four line types that were not on screen.
          This one describes the thing the map actually opens on, and retires with it. -->
     <div class="row" id="key-thread" hidden><svg width="40" height="20" aria-hidden="true"><line x1="4" y1="10" x2="36" y2="10" stroke="#FFD700" stroke-width="2.2"/><circle cx="4" cy="10" r="3" fill="#FFD700"/><circle cx="36" cy="10" r="3" fill="#FFD700"/></svg><span><b style="color:var(--ink)">The gold thread.</b> The shortest chain of friendships between the two people who live farthest apart</span></div>
-    <div class="row"><svg width="40" height="20" aria-hidden="true"><g stroke="#F2C14E" stroke-width="1.8"><line x1="1" y1="3" x2="39" y2="3"/><line x1="1" y1="10" x2="18.5" y2="10"/><line x1="21.5" y1="10" x2="39" y2="10"/><line x1="1" y1="17" x2="11.67" y2="17"/><line x1="14.67" y1="17" x2="25.33" y2="17"/><line x1="28.33" y1="17" x2="39" y2="17"/></g></svg><span><b style="color:var(--ink)">Pieces = hops.</b> Unbroken is 1°, two pieces 2°, three 3°…</span></div>
+    <div class="row"><svg width="40" height="20" aria-hidden="true"><g><rect x="1" y="7" width="6" height="6" fill="#FED007"/><rect x="7.5" y="7" width="6" height="6" fill="#F4BD08"/><rect x="14" y="7" width="6" height="6" fill="#EAA80A"/><rect x="20.5" y="7" width="6" height="6" fill="#DD920D"/><rect x="27" y="7" width="6" height="6" fill="#CC7912"/><rect x="33.5" y="7" width="6" height="6" fill="#B45E18"/></g></svg><span><b style="color:var(--ink)">Colour = hops.</b> Vivid gold is one step out; every ring further runs warmer, to burnt amber at 6°</span></div>
     <div class="row"><svg width="40" height="20" aria-hidden="true"><g stroke="#F2C14E"><line x1="1" y1="4" x2="39" y2="4" stroke-width="0.9"/><line x1="1" y1="11" x2="39" y2="11" stroke-width="2.1"/><line x1="1" y1="18" x2="39" y2="18" stroke-width="3.6"/></g></svg><span><b style="color:var(--ink)">Thickness = closeness.</b> How often that pair interacts</span></div>
-    <div class="row"><svg width="40" height="16" aria-hidden="true"><g stroke-width="2.2"><line x1="1" y1="4" x2="39" y2="4" stroke="#F2C14E" stroke-opacity=".18"/><line x1="1" y1="12" x2="39" y2="12" stroke="#FFD700"/></g></svg><span><b style="color:var(--ink)">Brightest = the degree you're on.</b> Closer rings sit back</span></div>
     <div class="row"><svg width="40" height="10" aria-hidden="true"><line x1="1" y1="5" x2="39" y2="5" stroke="#F2C14E" stroke-width="1.6" stroke-dasharray="1.5 3.5"/></svg><span>Fine dots: a mutual tie inside one ring</span></div>
     <div class="row"><svg width="40" height="18" aria-hidden="true"><circle cx="6" cy="9" r="2.2" fill="#F2C14E"/><circle cx="18" cy="9" r="4" fill="#F2C14E"/><circle cx="32" cy="9" r="6.5" fill="#F2C14E"/></svg><span>Bigger circle, more friends</span></div>
     <div class="row"><svg width="40" height="14" aria-hidden="true"><circle cx="20" cy="7" r="5.5" fill="#EDB93E" stroke="rgba(20,38,75,.55)"/><circle cx="24.5" cy="11" r="2.6" fill="#3FBF5A" stroke="#14264B" stroke-width="1"/></svg><span>Green dot, recently active</span></div>
@@ -845,10 +863,11 @@
         <dt>Search</dt><dd>Find anyone by name, town, or county.</dd>
         <dt>Filters</dt><dd>Gate the map by friend count, tie strength, mutual friends, reach, county, interests, and political issues. Hover any control for a hint.</dd>
         <dt>Lines</dt><dd>Shows or hides the connecting lines for whoever you have picked. With nobody picked there is nothing to draw, so the map stays clean until you choose someone. Hovering anyone previews their own ties either way.</dd>
-        <dt>Line Styles</dt><dd>A line's degree is how many pieces it is broken into: 1° runs unbroken, 2° breaks in two, 3° in three, out to 6°. Count the pieces to read the degree. Fine dots mean a mutual tie between two people on the same ring, which is not a step outward. Short lines stay solid — there isn't room to count them.</dd>
-        <dt>What's A Ring?</dt><dd>Everyone at exactly one degree from your selection. Ring 1 is their friends, ring 2 is friends of friends, and so on. The ring you're currently on is drawn brightest and thickest; the rings inside it recede.</dd>
+        <dt>Line Styles</dt><dd>A line's colour is its degree: vivid gold one step out, running warmer each ring until 6° is burnt amber. The chip under each degree button is that ring's colour, so the control shows you what it draws. Fine dots mean a mutual tie between two people on the same ring, which is not a step outward.</dd>
+        <dt>What's A Ring?</dt><dd>Everyone at exactly one degree from your selection. Ring 1 is their friends, ring 2 is friends of friends, and so on. Each ring has its own colour; a thicker line means that pair interacts more often.</dd>
         <dt>Find A Path</dt><dd>Open anyone's profile and hit <b>Find A Path</b>, then pick a second person — the shortest chain of friendships between them lights up, hop by hop.</dd>
         <dt>Compare Two People</dt><dd><b>Compare With</b> on a profile shows their mutual friends, shared interests, shared issues, and how many hops apart they are.</dd>
+        <dt>Who Connects You</dt><dd>Once you have joined the map, open anyone a friend of a friend away and the profile names the people who bridge the gap. Click one to walk the chain through them. If several people connect you equally directly, the chain says so.</dd>
         <dt>Challenge</dt><dd>The target button in the menu bar drops you on a stranger and dares you to reach another one, hopping friend to friend. Beat the shortest route if you can.</dd>
         <dt>Move Around</dt><dd>Drag to pan · scroll or pinch to zoom · double-click to zoom in.</dd>
         <dt>Keyboard</dt><dd>Tab to the map, then arrow keys pan, <b>+</b>/<b>−</b> zoom, <b>0</b> resets, <b>Esc</b> clears the selection.</dd>
@@ -1192,7 +1211,7 @@ const EIDX = new Map();
 for (let e = 0; e < NE; e++) EIDX.set(EA[e] * N + EB[e], e);
 const edgeOf = (a, b) => EIDX.get(a < b ? a * N + b : b * N + a);
 
-let focusOn = false, curStep = -1, primaryNode = -1, secondaryNode = -1;
+let focusOn = false, primaryNode = -1, secondaryNode = -1;
 let chainLit = false;   // path & compare draw solid and uniformly bright, not ring-coded
 let pathNodes = [], comparePair = null, game = null;
 let pickMode = null, pickAnchor = -1;
@@ -1237,7 +1256,7 @@ function mutualsOf(a, b) {
    Rebuilt on state change, never per frame. */
 function buildHighlight() {
   CLS.fill(-1); LITE.fill(0);
-  focusOn = false; curStep = -1; primaryNode = -1; secondaryNode = -1; chainLit = false;
+  focusOn = false; primaryNode = -1; secondaryNode = -1; chainLit = false;
   const put = (i, c) => { CLS[i] = Math.max(0, Math.min(6, c)); };
   const mark = (a, b, s) => { const e = edgeOf(a, b); if (e !== undefined) LITE[e] = s; };
   if (game) {
@@ -1248,7 +1267,6 @@ function buildHighlight() {
       for (let h = 0; h < game.hops.length; h++) put(game.hops[h], Math.min(h, 6));
       for (let h = 1; h < game.hops.length; h++) mark(game.hops[h-1], game.hops[h], Math.min(h, 6));
     } else {
-      curStep = 1;
       primaryNode = game.cur; secondaryNode = game.to;
       for (let h = 0; h < game.hops.length; h++) put(game.hops[h], 2);
       for (let h = 1; h < game.hops.length; h++) mark(game.hops[h-1], game.hops[h], 2);
@@ -1271,7 +1289,7 @@ function buildHighlight() {
     put(comparePair[0], 0); put(comparePair[1], 0);
     mark(comparePair[0], comparePair[1], 1);
   } else if (sel >= 0) {
-    focusOn = true; curStep = deg; primaryNode = sel;
+    focusOn = true; primaryNode = sel;
     for (let i = 0; i < N; i++) {
       const d = DIST[i];
       if (d >= 0 && d <= deg && (!anyFilter || PASS[i] || i === sel)) put(i, d);
@@ -1320,17 +1338,23 @@ function buildHighlight() {
 /* ================= render ================= */
 const SEL_GOLD = '#FFD700';     // gold-500, the selected node
 const HOVER_GOLD = '#FFDE2E';   // gold-300, hover
-const DEG_COLORS = [SEL_GOLD,'#FFDE2E','#F2C14E','#DFAE47','#C29540','#9F7B38','#7D622F'];
-/* A line's degree is drawn as that many countable segments: 1° is one unbroken
-   line, 2° breaks into two pieces, 3° into three, out to 6°. The break is a small
-   fixed notch — wide enough to count the pieces, no wider — not a share of the line.
-   A share is what made 2° read as two halves split by a void: one gap taking 28% of
-   the edge, where 6° spread the same 28% across five gaps and looked right. Mutual
-   same-ring ties are not a degree step, so they stay a fine repeating dot. */
+/* A line's degree is its hue: vivid gold at 1°, stepping to burnt amber at 6°. Index 0
+   is the selection itself and keeps gold-500 — the selected node's white ring is drawn
+   separately, and county mode paints every resident at index 0, so this slot is not
+   "you" alone. The six degree colours are also the swatches on the degree buttons and
+   the cells of the reach rail; all three read the same array.
+   This replaced a countable-segment encoding — 1° unbroken, 2° two pieces, out to 6°.
+   Ethan's call, 2026-09-11: counting was work, and short edges fell back to solid
+   anyway, so a large share of the map was never carrying its degree at all. */
+const DEG_COLORS = [SEL_GOLD,'#FED007','#F4BD08','#EAA80A','#DD920D','#CC7912','#B45E18'];
+/* Mutual same-ring ties are not a degree step and so have no hue of their own. They stay
+   a fine repeating dot — the only dash left on the map — in a gold that sits outside the
+   degree ramp, so it cannot be mistaken for a hop. */
 const DASH_MUTUAL = [1.5, 3.5];
-const GAP_PX = 8.5;          // the notch between segments, in screen px, at any zoom
-const MAX_GAP_SHARE = 0.30;  // ...but never let the notches eat this much of a short edge
-const MIN_SEG = 2.2, MIN_GAP = 1.4;   // below this a broken line stops being countable
+const MUTUAL_GOLD = '#F2C14E';
+/* Plain words for the six line colours, for the sentence under the panel that says what
+   is on screen. A colour encoding a screen reader cannot see has to be sayable. */
+const DEG_COLOR_NAMES = ['white','vivid gold','gold','warm gold','amber','deep amber','burnt amber'];
 let framePending = false, running = false;
 function needFrame() {
   if (!framePending) { framePending = true; requestAnimationFrame(frame); }
@@ -1357,25 +1381,6 @@ function frame(t) {
   const pulsing = !RM && sel >= 0 && (t - pulseT0) < 2400;
   render(t);
   if (pulsing || (opening && !opening.done)) needFrame();
-}
-
-/* Adds one edge to the current path, broken into `n` countable segments.
-   Falls back to a solid line when the run is too short for the breaks to read. */
-function addEdgeSegments(x1, y1, x2, y2, n) {
-  if (n <= 1) { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); return; }
-  const dx = x2 - x1, dy = y2 - y1;
-  const L = Math.hypot(dx, dy);
-  const gapL = Math.min(GAP_PX, L * MAX_GAP_SHARE / (n - 1));
-  const segL = (L - gapL * (n - 1)) / n;
-  if (segL < MIN_SEG || gapL < MIN_GAP) { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); return; }
-  const ux = dx / L, uy = dy / L;
-  let at = 0;
-  for (let i = 0; i < n; i++) {
-    ctx.moveTo(x1 + ux * at, y1 + uy * at);
-    at += segL;
-    ctx.lineTo(x1 + ux * at, y1 + uy * at);
-    at += gapL;
-  }
 }
 
 function drawBadge(sx, sy, rs) {
@@ -1429,10 +1434,11 @@ function render(t) {
   ctx.lineCap = focus ? 'round' : 'butt';   // butt caps are cheaper on the 4.5k-segment bulk pass
 
   /* Edges carry two independent signals, one channel each:
-       WIDTH  = tie strength (1-9), nothing else.
-       OPACITY = which ring the line steps into, nothing else.
-     Keeping them separate is what stops a weak tie on the active ring from
-     out-shouting a strong tie one ring in. */
+       WIDTH = tie strength (1-9), nothing else.
+       HUE   = which ring the line steps into, nothing else.
+     Keeping them separate is what stops a weak tie on the near ring from
+     out-shouting a strong tie one ring out. Opacity is no longer a channel —
+     it is one constant for every lit edge. */
   /* Strength 1..9 -> stroke width. Geometric, not additive: the old (0.55 + w*0.30)
      put a 0.55px floor under every line, so 1 and 9 sat 0.96px apart at 3.8x and the
      84% of ties in the 3..8 middle all read as one weight. Stepping by a constant
@@ -1494,9 +1500,9 @@ function render(t) {
     /* Lines gates the selection's rings — off leaves the circles and no strokes. No
        full-web underlay: laying the whole graph in behind a selection hazed edges between
        people with nothing to do with the person picked across the map.
-       Lit edges, bucketed by (ring step, tie strength). The dash pattern says which degree
-       a line steps into; the ring you are currently on is drawn last, brightest and thickest,
-       over a soft glow, so it reads first. */
+       Lit edges, bucketed by (ring step, tie strength). Hue says which degree a line steps
+       into; far rings are laid down first so near ones sit on top, the same order the node
+       plates below are drawn in. */
     for (let i = 0; i < 80; i++) EBUF[i].length = 0;
     let anyMutual = false;
     for (let e = 0; e < NE; e++) {
@@ -1506,81 +1512,34 @@ function render(t) {
       if (s === 7) anyMutual = true;
       EBUF[s * 10 + EW[e]].push(e);
     }
-    /* Anchor brightness to the outermost ring that actually has edges, not to curStep.
-       On a well-connected person every ring is filled by 4° or 5°, so at 6° curStep holds
-       no edges at all: there was no bright ring, and all 2,354 real edges sat receded two
-       or three steps down at a tenth of full alpha. Falling back to the deepest populated
-       ring gives the view something lit to read from at every degree. */
-    let refStep = 0;
-    for (let s = 1; s <= 6; s++) {
-      for (let w = F.wmin; w <= 9; w++) if (EBUF[s * 10 + w].length) { refStep = s; break; }
-    }
-    if (curStep >= 1 && refStep) refStep = Math.min(curStep, refStep);
-    else if (curStep >= 1) refStep = curStep;
     const order = [];
-    if (anyMutual) order.push(7);                                  // mutual ties sit underneath
-    for (let s = 1; s <= 6; s++) if (s !== refStep) order.push(s);
-    if (refStep >= 1) order.push(refStep);                         // the lit degree goes last
-    const segCount = (s) => (chainLit || s === 7) ? 1 : Math.min(s, 6);
-    const tracePath = (s) => {
-      const n = segCount(s);
-      ctx.beginPath();
-      for (let w = F.wmin; w <= 9; w++) {
-        const arr = EBUF[s * 10 + w];
-        for (let j = 0; j < arr.length; j++) {
-          const e = arr[j], a = EA[e], b = EB[e];
-          addEdgeSegments(sxA[a], syA[a], sxA[b], syA[b], n);
-        }
-      }
-    };
-    /* Additive blending. Painted normally, the 2,500 edges a hub lights at 5° or 6° each
-       cover the last and the middle flattens into one opaque wash — a corridor carrying
-       forty ties looks identical to one carrying two. Under 'lighter' the strokes sum, so
-       density becomes brightness and the trunks separate from the strays. Alphas drop to
-       compensate: summing means two strokes at 0.9 clip on contact. Gold has no blue, so
-       the busiest overlaps saturate to yellow rather than blowing out to white. */
-    const ADD_MIX = 0.85;
-    ctx.globalCompositeOperation = 'lighter';
+    if (anyMutual) order.push(7);                 // mutual ties sit underneath
+    for (let s = 6; s >= 1; s--) order.push(s);   // far rings first, near rings on top
+    /* Degree is carried by hue and nothing else. No glow on the active ring, no additive
+       blend, and no per-ring fade: every lit edge is drawn source-over at one alpha, in
+       its own colour. Ethan's call, 2026-09-11 — the three effects were independent and
+       any of them can come back on its own. What each one bought is in DEADENDS.md.
+       Path, compare and county modes set chainLit: they light a chain or a whole county,
+       where a step is not a degree, so those stay one uniform gold. */
+    const EDGE_ALPHA = 0.85;   // the one remaining knob: keeps dense overlap off opaque
     for (const s of order) {
-      const cur = s === refStep || chainLit;
-      let has = false;
-      for (let w = F.wmin; w <= 9 && !has; w++) if (EBUF[s * 10 + w].length) has = true;
-      if (!has) continue;
-      if (cur) {                                   // soft glow marks the active degree
-        ctx.setLineDash([]);
-        tracePath(s);
-        ctx.strokeStyle = `rgba(255,215,0,${(0.10 * ADD_MIX).toFixed(3)})`;
-        ctx.lineWidth = Math.max(3, wPx(5) * 2.2);
-        ctx.stroke();
-      }
       ctx.setLineDash((s === 7 && !chainLit) ? DASH_MUTUAL : []);
-      /* Rings inside the active one fall away on a curve: the first step in is a half,
-         and each step after that costs less than the one before, so the decay eases
-         instead of holding a constant ratio. A straight halving is exponential but plots
-         straight on a log scale — by 6° it put the 1° ring at 3%, past the point of being
-         seen at all. RING_EASE < 1 bends it, keeping the deep rings as faint context. */
-      const RING_EASE = 0.7;
-      const recede = curStep < 1 ? 1
-                   : (s === 7 ? 0.30
-                              : Math.pow(0.5, Math.pow(Math.max(0, refStep - s), RING_EASE)));
+      ctx.strokeStyle = chainLit ? SEL_GOLD : (s === 7 ? MUTUAL_GOLD : DEG_COLORS[s]);
+      ctx.globalAlpha = s === 7 ? EDGE_ALPHA * 0.6 : EDGE_ALPHA;
       for (let w = F.wmin; w <= 9; w++) {
         const arr = EBUF[s * 10 + w];
         if (!arr.length) continue;
         ctx.beginPath();
-        const nSeg = segCount(s);
         for (let j = 0; j < arr.length; j++) {
           const e = arr[j], a = EA[e], b = EB[e];
-          addEdgeSegments(sxA[a], syA[a], sxA[b], syA[b], nSeg);
+          ctx.moveTo(sxA[a], syA[a]); ctx.lineTo(sxA[b], syA[b]);
         }
-        const alpha = (cur ? 0.90 : Math.min(0.9, 0.90 * recede)) * ADD_MIX;
-        ctx.strokeStyle = cur ? `rgba(255,215,0,${alpha.toFixed(3)})`
-                              : `rgba(242,193,78,${alpha.toFixed(3)})`;
-        ctx.lineWidth = wPx(w);          // strength only — priority lives in the alpha
+        ctx.lineWidth = wPx(w);          // tie strength only — degree lives in the colour
         ctx.stroke();
       }
     }
+    ctx.globalAlpha = 1;
     ctx.setLineDash([]);
-    ctx.globalCompositeOperation = 'source-over';
   }
 
   /* nodes — classified once, then drawn in a handful of batched fills/strokes */
@@ -1839,6 +1798,13 @@ function avatarHTML(i, cls) {
    counts to show, so the counts read as dashes — but the degree is still settable, and
    whoever you pick next opens at it. That is why selectPerson no longer resets to 1:
    the bar is a standing view setting now, not a per-profile control. */
+/* The chip under each degree's count, in that degree's line colour. The map encodes a
+   degree as a hue and the legend is shut by default on a phone, so without this the
+   control that picks a degree never shows what picking it does. 0° draws no lines at
+   all — it is the person alone — so its chip is the white the selected node wears. */
+function degSwatch(k) {
+  return `<i class="dsw" aria-hidden="true" style="background:${k === 0 ? '#FFFFFF' : DEG_COLORS[k]}"></i>`;
+}
 function degButtonsHTML() {
   const live = sel >= 0;
   return Array.from({length: 7}, (_, k) => {
@@ -1847,7 +1813,7 @@ function degButtonsHTML() {
     return `<button class="degbtn" role="radio" aria-checked="${k === deg}" data-deg="${k}"
       tabindex="${k === deg ? 0 : -1}"
       title="${live ? 'Show the ' + k + ' degree ring' : 'Open the next person you pick at ' + k + '°'}"
-      aria-label="${live ? 'Degree ' + k + ': ' + fmt(cum) + ' people' : 'Degree ' + k + ', applies to the next person you pick'}"><b>${k}°</b><span>${count}</span></button>`;
+      aria-label="${live ? 'Degree ' + k + ': ' + fmt(cum) + ' people' : 'Degree ' + k + ', applies to the next person you pick'}"><b>${k}°</b><span>${count}</span>${degSwatch(k)}</button>`;
   }).join('');
 }
 /* The average Carolinian's world, from the cumulative reach every node already carries.
@@ -1956,6 +1922,19 @@ function friendRows(list, showBar) {
     </button>`).join('');
 }
 
+/* The county plate. Its own geometry, not a generic badge: the path string is the one the
+   map strokes, and the viewBox comes from the bbox COUNTIES already computed, so each of
+   the 46 fills the plate whatever its size or aspect. Oconee and Charleston both read.
+   `d` is substrate coordinates; the viewBox is what maps them into this box, so the plate
+   never needs to know the map's camera. */
+function countyPlateHTML(ci) {
+  const c = COUNTIES[ci];
+  const [mnx, mny, mxx, mxy] = c.bbox;
+  return `<svg class="cplate" aria-hidden="true" focusable="false"
+    viewBox="${mnx} ${mny} ${mxx - mnx} ${mxy - mny}"
+    preserveAspectRatio="xMidYMid meet"><path d="${c.d}"/></svg>`;
+}
+
 function showProfile(i) {
   const c = COUNTIES[CI[i]];
   const friends = [];
@@ -1963,6 +1942,7 @@ function showProfile(i) {
   friends.sort((a, b) => b[1] - a[1]);
   const top = friends.slice(0, 6);
   phead.innerHTML = `
+    ${countyPlateHTML(CI[i])}
     ${avatarHTML(i)}
     <div style="min-width:0">
       <button class="btn icon-btn" id="closepanel" aria-label="Close panel">✕</button>
@@ -2038,7 +2018,59 @@ function youBlockHTML(i, first) {
       <button class="stat" id="ycompare" title="Put your profile side by side with ${first}'s"><b>${shared}</b><span>In common</span></button>
     </div>
     ${d > 0 ? `<button class="btn" id="ywalk" style="width:100%;margin-top:8px"
-        title="Draw the chain of friendships from you to ${esc(NAME[i])}">Walk the chain to ${first}</button>` : ''}`;
+        title="Draw the chain of friendships from you to ${esc(NAME[i])}">Walk the chain to ${first}</button>` : ''}
+    ${mutualsBlockHTML(i, first)}`;
+}
+
+/* The people who actually make the connection. The panel could always tell you how many
+   friends you shared with someone; it could never tell you who they were — which is the
+   question an app called Six Degrees exists to answer.
+
+   Only 1° and 2° ever have rows here, and that is not a rule imposed on the list: sharing
+   a friend puts two people at most two hops apart, so mutualsOf() is empty past 2°. The
+   two cases are different questions, and the rows behave differently for a reason:
+
+     2° — these people ARE the connection. Each one is a complete shortest chain, so the
+          row walks it: data-through, and showPathVia() lights you → them → the profile.
+     1° — you are already friends. A route through a mutual would be two hops where one
+          exists, and the path panel would then announce "2 hops apart" about your own
+          friend, which is false. So these rows only open the person.
+
+   Every mutual is by definition a direct friend of yours, so the rows do not repeat
+   youRelShort() — it would read "1st" on every line and say nothing. */
+const MUT_SHOWN = 8;
+function mutualRows(list, bridge, other) {
+  return list.map(u => `
+    <button class="frow" ${bridge ? `data-through="${u}"` : `data-person="${u}"`}
+      title="${bridge ? 'Walk the chain from you to ' + esc(NAME[other]) + ' through ' + esc(NAME[u])
+                      : 'Open ' + esc(NAME[u])}"
+      ${bridge ? `aria-label="Walk the chain to ${esc(NAME[other])} through ${esc(NAME[u])}, of ${esc(TOWN[u])}"` : ''}>
+      ${avatarHTML(u, 'mini')}
+      <span><span class="fname">${esc(NAME[u])}</span><br>
+      <span class="fmeta">${esc(TOWN[u])} · ${DEG[u]} friend${DEG[u] === 1 ? '' : 's'}</span></span>
+      ${bridge ? '<span class="via" aria-hidden="true">›</span>' : ''}
+    </button>`).join('');
+}
+function mutualsBlockHTML(i, first) {
+  const d = YDIST[i];
+  if (d !== 1 && d !== 2) return '';
+  const mut = mutualsOf(youId, i).sort((x, y) => DEG[y] - DEG[x]);
+  if (!mut.length) return '';
+  const bridge = d === 2;
+  const them = esc(NAME[i].split(' ')[0]);
+  const head = bridge
+    ? `Connected through ${mut.length === 1 ? 'one person' : mut.length + ' people'}`
+    : `Friends you and ${first} share (${mut.length})`;
+  const note = bridge
+    ? `You and ${them} are not friends. ${mut.length === 1 ? 'This person knows' : 'Each of these people knows'} you both — open one to walk the chain through them.`
+    : `You and ${first} are already friends, so nobody stands between you. ${mut.length === 1 ? 'This is the friend' : 'These are the friends'} you have in common.`;
+  return `
+    <h3 class="sect">${head}</h3>
+    <p class="note" style="margin:0 0 6px">${note}</p>
+    <div class="plist" id="mutlist">${mutualRows(mut.slice(0, MUT_SHOWN), bridge, i)}</div>
+    ${mut.length > MUT_SHOWN
+      ? `<button class="btn" data-expand-mutuals="${i}" style="width:100%;margin-top:8px">Show all ${mut.length}</button>`
+      : ''}`;
 }
 
 /* The identity card. Lives in the panel because an identity is durable state, and the
@@ -2066,8 +2098,8 @@ function lineNote() {
   const who = esc(NAME[sel].split(' ')[0]);
   if (deg === 0) return `No lines at 0° — just ${who}. Step out to 1° to draw their friendships.`;
   const bright = deg === 1
-    ? `The bright unbroken lines are ${who}'s own friendships.`
-    : `The bright lines broken into ${deg} pieces are the newest step out; ${who}'s own friendships sit further back, unbroken.`;
+    ? `The gold lines are ${who}'s own friendships.`
+    : `Each ring has its own colour: ${who}'s own friendships are the vivid gold, and every step out from them runs warmer, to ${deg}° in ${DEG_COLOR_NAMES[deg]}.`;
   return `${bright} Thicker means that pair interacts more.`;
 }
 
@@ -2115,6 +2147,7 @@ function showCounty(ci) {
   const c = COUNTIES[ci];
   const mem = c.members.slice().sort((a, b) => DEG[b] - DEG[a]);
   phead.innerHTML = `
+    ${countyPlateHTML(ci)}
     <div style="min-width:0">
       <button class="btn icon-btn" id="closepanel" aria-label="Close panel">✕</button>
       <div class="pname" id="ptitle" tabindex="-1">${esc(c.name)} County</div>
@@ -2139,7 +2172,11 @@ function hopRows(list) {
 }
 
 /* ---------- path view ---------- */
-function showPath() {
+/* `routes`, when given, is how many equally short chains exist between the two ends. It
+   is passed only by showPathVia(), where you picked one bridge out of several and the
+   old note — "Shortest chain of friendships in this fabricated network" — would have
+   read as though it were the only one. */
+function showPath(routes) {
   const a = pathNodes[0], b = pathNodes[pathNodes.length - 1];
   const hops = pathNodes.length - 1;
   const counties = new Set(pathNodes.map(u => CI[u])).size;
@@ -2169,7 +2206,9 @@ function showPath() {
       <button class="btn" id="path2compare">Compare the ends</button>
       <button class="btn" data-person="${a}">Open ${esc(NAME[a].split(' ')[0])}</button>
     </div>
-    <p class="note">Shortest chain of friendships in this fabricated network. Anyone in it opens with a click.</p>`;
+    <p class="note">${routes > 1
+      ? `One of ${routes} equally short chains — ${routes - 1} other ${routes === 2 ? 'person connects' : 'people connect'} these two just as directly.`
+      : 'Shortest chain of friendships in this fabricated network.'} Anyone in it opens with a click.</p>`;
   openPanel();
 }
 
@@ -2322,6 +2361,23 @@ function showPathBetween(a, b) {
   showPath();
   zoomToNodes(chain);
   announce(`${chain.length - 1} hops from ${NAME[a]} to ${NAME[b]}.`);
+  needFrame();
+}
+/* The same walk as showPathBetween, but through a bridge you chose rather than whichever
+   one the BFS happened to reach first. `via` is a mutual friend of both ends, so the
+   chain is two hops and is genuinely *a* shortest chain — there is just more than one of
+   them, which is why showPath() says how many rather than calling this one "the" chain.
+   Asserted, not assumed: a via that is not adjacent to both ends would draw a chain whose
+   lines do not exist, so it falls back rather than lying. */
+function showPathVia(a, via, b) {
+  const ok = friendsOf(a).includes(via) && friendsOf(b).includes(via);
+  if (!ok) { showPathBetween(a, b); return; }
+  clearExplore(); enterExplore();
+  pathNodes = [a, via, b];
+  applyFilters();
+  showPath(mutualsOf(a, b).length);
+  zoomToNodes(pathNodes);
+  announce(`${NAME[a]} to ${NAME[b]} through ${NAME[via]}, 2 hops.`);
   needFrame();
 }
 function showCompareOf(a, b) {
@@ -2477,10 +2533,25 @@ function clearSelection(refit) {
 
 /* ================= panel events (delegated) ================= */
 panel.addEventListener('click', e => {
+  /* Walking the chain through a named bridge. Tested before [data-person] on purpose: a
+     bridge row is a person row in every other respect, and the day someone gives it both
+     attributes, whichever closest() runs first would silently win. */
+  const th = e.target.closest('[data-through]');
+  if (th) { showPathVia(youId, +th.dataset.through, sel); return; }
   const pBtn = e.target.closest('[data-person]');
   if (pBtn) { selectPerson(+pBtn.dataset.person, { focusPanel: true }); return; }
   const cBtn = e.target.closest('[data-county]');
   if (cBtn) { selectCounty(+cBtn.dataset.county, { focusPanel: true }); return; }
+  const exM = e.target.closest('[data-expand-mutuals]');
+  if (exM) {
+    const i = +exM.dataset.expandMutuals;
+    const all = mutualsOf(youId, i).sort((x, y) => DEG[y] - DEG[x]);
+    const list = document.getElementById('mutlist');
+    if (list) list.innerHTML = mutualRows(all, YDIST[i] === 2, i);
+    exM.remove();
+    announce(`Showing all ${all.length}.`);
+    return;
+  }
   const exF = e.target.closest('[data-expand-friends]');
   if (exF) {
     const i = +exF.dataset.expandFriends;
