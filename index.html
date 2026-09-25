@@ -787,7 +787,7 @@
     <!-- The key's first row used to explain four line types that were not on screen.
          This one describes the thing the map actually opens on, and retires with it. -->
     <div class="row" id="key-thread" hidden><svg width="40" height="20" aria-hidden="true"><line x1="4" y1="10" x2="36" y2="10" stroke="#FFD700" stroke-width="2.2"/><circle cx="4" cy="10" r="3" fill="#FFD700"/><circle cx="36" cy="10" r="3" fill="#FFD700"/></svg><span><b style="color:var(--ink)">The gold thread.</b> The shortest chain of friendships between the two people who live farthest apart</span></div>
-    <div class="row"><svg width="40" height="20" aria-hidden="true"><g><rect x="1" y="7" width="6" height="6" fill="#FED007"/><rect x="7.5" y="7" width="6" height="6" fill="#F4BD08"/><rect x="14" y="7" width="6" height="6" fill="#EAA80A"/><rect x="20.5" y="7" width="6" height="6" fill="#DD920D"/><rect x="27" y="7" width="6" height="6" fill="#CC7912"/><rect x="33.5" y="7" width="6" height="6" fill="#B45E18"/></g></svg><span><b style="color:var(--ink)">Colour = hops.</b> Vivid gold is one step out; every ring further runs warmer, to burnt amber at 6°</span></div>
+    <div class="row"><svg width="40" height="20" aria-hidden="true"><g><rect x="1" y="7" width="6" height="6" fill="#FFD23F"/><rect x="7.5" y="7" width="6" height="6" fill="#FF8C42"/><rect x="14" y="7" width="6" height="6" fill="#FF5A6E"/><rect x="20.5" y="7" width="6" height="6" fill="#E056C8"/><rect x="27" y="7" width="6" height="6" fill="#9B7BFF"/><rect x="33.5" y="7" width="6" height="6" fill="#4FC3F7"/></g></svg><span><b style="color:var(--ink)">Colour = hops.</b> Gold is one step out; every ring further runs cooler, to sky blue at 6°</span></div>
     <div class="row"><svg width="40" height="20" aria-hidden="true"><g stroke="#F2C14E"><line x1="1" y1="4" x2="39" y2="4" stroke-width="0.9"/><line x1="1" y1="11" x2="39" y2="11" stroke-width="2.1"/><line x1="1" y1="18" x2="39" y2="18" stroke-width="3.6"/></g></svg><span><b style="color:var(--ink)">Thickness = closeness.</b> How often that pair interacts</span></div>
     <div class="row"><svg width="40" height="10" aria-hidden="true"><line x1="1" y1="5" x2="39" y2="5" stroke="#F2C14E" stroke-width="1.6" stroke-dasharray="1.5 3.5"/></svg><span>Fine dots: a mutual tie inside one ring</span></div>
     <div class="row"><svg width="40" height="18" aria-hidden="true"><circle cx="6" cy="9" r="2.2" fill="#F2C14E"/><circle cx="18" cy="9" r="4" fill="#F2C14E"/><circle cx="32" cy="9" r="6.5" fill="#F2C14E"/></svg><span>Bigger circle, more friends</span></div>
@@ -873,7 +873,7 @@
         <dt>Search</dt><dd>Find anyone by name, town, or county.</dd>
         <dt>Filters</dt><dd>Gate the map by friend count, tie strength, mutual friends, reach, county, interests, and political issues. Hover any control for a hint.</dd>
         <dt>Lines</dt><dd>Shows or hides the connecting lines for whoever you have picked. With nobody picked there is nothing to draw, so the map stays clean until you choose someone. Hovering anyone previews their own ties either way.</dd>
-        <dt>Line Styles</dt><dd>A line's colour is its degree: vivid gold one step out, running warmer each ring until 6° is burnt amber. The chip under each degree button is that ring's colour, so the control shows you what it draws. Fine dots mean a mutual tie between two people on the same ring, which is not a step outward.</dd>
+        <dt>Line Styles</dt><dd>A line's colour is its degree: gold one step out, running cooler each ring — orange, coral, magenta, violet — until 6° is sky blue. The chip under each degree button is that ring's colour, so the control shows you what it draws. Fine dots mean a mutual tie between two people on the same ring, which is not a step outward.</dd>
         <dt>What's A Ring?</dt><dd>Everyone at exactly one degree from your selection. Ring 1 is their friends, ring 2 is friends of friends, and so on. Each ring has its own colour; a thicker line means that pair interacts more often.</dd>
         <dt>Find A Path</dt><dd>Open anyone's profile and hit <b>Find A Path</b>, then pick a second person — the shortest chain of friendships between them lights up, hop by hop.</dd>
         <dt>Compare Two People</dt><dd><b>Compare With</b> on a profile shows their mutual friends, shared interests, shared issues, and how many hops apart they are.</dd>
@@ -957,6 +957,60 @@ for (let i = 0; i < NE; i++) BUCKETS[EW[i]].push(i);
 /* draw order: big first, small on top */
 const ORDER = Array.from({length: N}, (_, i) => i).sort((a, b) => R[b] - R[a]);
 
+/* Breathing room. Townmates are generated on top of one another, so once people grow
+   into photographs they bury each other. One pass at load nudges overlapping pairs apart
+   until each pair sits at SPREAD × (sum of radii) — just touching at about 8× zoom on a
+   desktop, with clear gaps beyond. Soft (a quarter of the overlap per pass), capped at
+   SPREAD_MAX world units from home so nobody leaves their town. Deterministic, no
+   randomness, a few milliseconds; must run before the hit-test grid below is built.
+   Ethan, 2026-09-25. */
+const SPREAD = 0.46, SPREAD_MAX = 3, SPREAD_PASSES = 30;
+(function spreadNodes() {
+  const C = 12, X0 = X.slice(), Y0 = Y.slice();
+  for (let p = 0; p < SPREAD_PASSES; p++) {
+    const g = new Map();
+    for (let i = 0; i < N; i++) {
+      const key = ((X[i] / C) | 0) * 4096 + ((Y[i] / C) | 0);
+      (g.get(key) || g.set(key, []).get(key)).push(i);
+    }
+    let moved = 0;
+    for (let i = 0; i < N; i++) {
+      const cx = (X[i] / C) | 0, cy = (Y[i] / C) | 0;
+      for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) {
+        const cell = g.get(gx * 4096 + gy);
+        if (!cell) continue;
+        for (const j of cell) {
+          if (j <= i) continue;
+          let dx = X[j] - X[i], dy = Y[j] - Y[i], d = Math.hypot(dx, dy);
+          const gap = SPREAD * (R[i] + R[j]) - d;
+          if (gap <= 0) continue;
+          if (d < 1e-6) { dx = Math.cos(i); dy = Math.sin(i); d = 1; }   // exact stack: fixed direction
+          const push = gap * 0.25 / d;
+          X[i] -= dx * push; Y[i] -= dy * push; X[j] += dx * push; Y[j] += dy * push;
+          moved++;
+        }
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      const ox = X[i] - X0[i], oy = Y[i] - Y0[i], m = Math.hypot(ox, oy);
+      if (m > SPREAD_MAX) { X[i] = X0[i] + ox * SPREAD_MAX / m; Y[i] = Y0[i] + oy * SPREAD_MAX / m; }
+    }
+    if (!moved) break;
+  }
+  /* coastal and border towns: a nudge must not carry anyone out of the state */
+  const hit = document.createElement('canvas').getContext('2d');
+  for (let i = 0; i < N; i++) {
+    if (X[i] === X0[i] && Y[i] === Y0[i]) continue;
+    if (!hit.isPointInPath(STATE_PATH, X0[i], Y0[i])) continue;
+    let t = 1;
+    while (t > 0.06 && !hit.isPointInPath(STATE_PATH, X[i], Y[i])) {
+      t /= 2;
+      X[i] = X0[i] + (X[i] - X0[i]) / 2; Y[i] = Y0[i] + (Y[i] - Y0[i]) / 2;
+    }
+    if (!hit.isPointInPath(STATE_PATH, X[i], Y[i])) { X[i] = X0[i]; Y[i] = Y0[i]; }
+  }
+})();
+
 /* spatial grid for node hit-testing */
 const CELL = 16, GRID = new Map();
 for (let i = 0; i < N; i++) {
@@ -999,6 +1053,17 @@ const hitCtx = document.createElement('canvas').getContext('2d');
 let vw = 0, vh = 0, dpr = 1, baseDpr = 1;
 let cam = { x: SUB.w/2, y: SUB.h/2, k: 1 };
 let fitK = 1;
+/* Screen size of a node, relative to its world radius. At the whole-state view it is the
+   old fitK^0.62, so the overview is unchanged; from there it grows at 0.72 of the map's
+   rate instead of 0.62, measured against the overview rather than absolute zoom, so a
+   phone's people grow as much per pinch as a desktop's. Ethan chose 0.72 on 2026-09-25
+   over 0.95, which never let townmates separate. Drawing and hit testing both read it. */
+const nodeScaleAt = k => Math.pow(fitK, 0.62) * Math.pow(k / fitK, 0.72);
+/* Zoom step for the + / − buttons and double-tap. A phone's overview sits much further
+   out (fitK ≈ 0.31 against ≈ 1.1), so its range to full zoom is ~110× against ~31×. The
+   step is raised to the power that makes both reach full zoom in the same number of taps;
+   on a desktop the exponent is 1 and nothing changes. */
+const zoomStep = base => Math.pow(base, Math.max(1, Math.log(34 / fitK) / Math.log(31)));
 
 /* During drag/pinch/zoom the canvas drops to 1x resolution (the renderer is
    fill-rate bound on big screens), then snaps back crisp on idle. */
@@ -1348,7 +1413,9 @@ function buildHighlight() {
 /* ================= render ================= */
 const SEL_GOLD = '#FFD700';     // gold-500, the selected node
 const HOVER_GOLD = '#FFDE2E';   // gold-300, hover
-/* A line's degree is its hue: vivid gold at 1°, stepping to burnt amber at 6°. Index 0
+/* A line's degree is its hue: warm near, cool far — gold at 1°, then orange, coral,
+   magenta, violet, sky blue at 6°. Ethan, 2026-09-25: the old gold-to-amber ramp did not
+   separate its steps enough to read. Index 0
    is the selection itself and keeps gold-500 — the selected node's white ring is drawn
    separately, and county mode paints every resident at index 0, so this slot is not
    "you" alone. The six degree colours are also the swatches on the degree buttons and
@@ -1356,7 +1423,7 @@ const HOVER_GOLD = '#FFDE2E';   // gold-300, hover
    This replaced a countable-segment encoding — 1° unbroken, 2° two pieces, out to 6°.
    Ethan's call, 2026-09-11: counting was work, and short edges fell back to solid
    anyway, so a large share of the map was never carrying its degree at all. */
-const DEG_COLORS = [SEL_GOLD,'#FED007','#F4BD08','#EAA80A','#DD920D','#CC7912','#B45E18'];
+const DEG_COLORS = [SEL_GOLD,'#FFD23F','#FF8C42','#FF5A6E','#E056C8','#9B7BFF','#4FC3F7'];
 /* Mutual same-ring ties are not a degree step and so have no hue of their own. They stay
    a fine repeating dot — the only dash left on the map — in a gold that sits outside the
    degree ramp, so it cannot be mistaken for a hop. */
@@ -1364,7 +1431,7 @@ const DASH_MUTUAL = [1.5, 3.5];
 const MUTUAL_GOLD = '#F2C14E';
 /* Plain words for the six line colours, for the sentence under the panel that says what
    is on screen. A colour encoding a screen reader cannot see has to be sayable. */
-const DEG_COLOR_NAMES = ['white','vivid gold','gold','warm gold','amber','deep amber','burnt amber'];
+const DEG_COLOR_NAMES = ['white','gold','orange','coral','magenta','violet','sky blue'];
 let framePending = false, running = false;
 function needFrame() {
   if (!framePending) { framePending = true; requestAnimationFrame(frame); }
@@ -1437,7 +1504,7 @@ function render(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const sxA = frameSX, syA = frameSY;
   for (let i = 0; i < N; i++) { sxA[i] = w2sx(X[i]); syA[i] = w2sy(Y[i]); }
-  const nodeScale = Math.pow(k, 0.62);
+  const nodeScale = nodeScaleAt(k);
   const mnx = -60, mny = -60, mxx = vw + 60, mxy = vh + 60;
 
   const focus = focusOn;
@@ -1742,7 +1809,7 @@ const labelW = new Map();   // cached measureText widths, cleared when the webfo
 /* ================= hit testing ================= */
 function nodeAt(sx, sy, touch) {
   const wx = s2wx(sx), wy = s2wy(sy);
-  const nodeScale = Math.pow(cam.k, 0.62);
+  const nodeScale = nodeScaleAt(cam.k);
   const pad = (touch ? 14 : 6) / cam.k;
   const reach = 24 + pad + CELL;   // max world-space node radius is ~19 at min zoom
   const gx0 = ((wx - reach) / CELL) | 0, gx1 = ((wx + reach) / CELL) | 0;
@@ -2109,7 +2176,7 @@ function lineNote() {
   if (deg === 0) return `No lines at 0° — just ${who}. Step out to 1° to draw their friendships.`;
   const bright = deg === 1
     ? `The gold lines are ${who}'s own friendships.`
-    : `Each ring has its own colour: ${who}'s own friendships are the vivid gold, and every step out from them runs warmer, to ${deg}° in ${DEG_COLOR_NAMES[deg]}.`;
+    : `Each ring has its own colour: ${who}'s own friendships are gold, and every step out from them runs cooler, to ${deg}° in ${DEG_COLOR_NAMES[deg]}.`;
   return `${bright} Thicker means that pair interacts more.`;
 }
 
@@ -2811,7 +2878,7 @@ canvas.addEventListener('dblclick', e => {
   if (nodeAt(e.clientX, e.clientY, false) >= 0) return;
   userMoved = true;
   const wx = s2wx(e.clientX), wy = s2wy(e.clientY);
-  flyTo(wx, wy, cam.k * 2.1, 360);
+  flyTo(wx, wy, cam.k * zoomStep(2.1), 360);
 });
 
 /* keyboard on canvas */
@@ -2844,8 +2911,8 @@ window.addEventListener('keydown', e => {
 });
 
 /* zoom buttons */
-$('zin').addEventListener('click', () => { userMoved = true; flyTo(cam.x, cam.y, cam.k * 1.6, 260); });
-$('zout').addEventListener('click', () => { userMoved = true; flyTo(cam.x, cam.y, cam.k / 1.6, 260); });
+$('zin').addEventListener('click', () => { userMoved = true; flyTo(cam.x, cam.y, cam.k * zoomStep(1.6), 260); });
+$('zout').addEventListener('click', () => { userMoved = true; flyTo(cam.x, cam.y, cam.k / zoomStep(1.6), 260); });
 $('zfit').addEventListener('click', () => { userMoved = false; clearSelection(false); fitState(); });
 
 /* ================= search ================= */
